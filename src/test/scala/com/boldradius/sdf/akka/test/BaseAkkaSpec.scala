@@ -1,7 +1,7 @@
 package com.boldradius.sdf.akka.test
 
 import akka.actor.{ ActorIdentity, ActorRef, ActorSystem, Identify }
-import akka.testkit.{TestProbe, TestKit, TestActorRef}
+import akka.testkit.{TestProbe}
 import org.scalatest.BeforeAndAfterAll
 import scala.concurrent.duration.{ DurationInt, FiniteDuration }
 
