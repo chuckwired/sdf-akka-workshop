@@ -12,15 +12,12 @@ class RequestConsumer extends Actor with ActorLogging {
 var sessionStorage = Map.empty[Long, ActorRef]
 
   def receive: Receive = {
-    case Request(id, now, randomUrl, referrer, browser) =>
-      if(sessionStorage.exists(record => record._1 == id)){
+    case Request(id, now, randomUrl, referrer, browser) if sessionStorage.exists(record => record._1 == id) =>
         sessionStorage(id) forward Request(id, now, randomUrl, referrer, browser)
-      }
-      else {
+    case Request(id, now, randomUrl, referrer, browser) =>
         val stActor = context.actorOf(SessionTracker.props, "st-" + id.toString)
         sessionStorage += (id -> stActor)
         stActor forward Request(id, now, randomUrl, referrer, browser)
-      }
     case message => log.debug(s"Received the following message: $message")
   }
 }

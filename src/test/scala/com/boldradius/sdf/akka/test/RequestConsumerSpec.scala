@@ -13,7 +13,7 @@ class RequestConsumerSpec extends BaseAkkaSpec {
       rc.sessionStorage.size shouldBe 1
     }
 
-    "result in RequestConsumer with 1 sessionStorage element2" in {
+    """result in RequestConsumer with 1 sessionStorage with an Actor named "st-1" """ in {
       val requestConsumer = TestActorRef(RequestConsumer.props)
       requestConsumer.receive(TestData.requests(0))
       val rc: RequestConsumer = requestConsumer.underlyingActor
