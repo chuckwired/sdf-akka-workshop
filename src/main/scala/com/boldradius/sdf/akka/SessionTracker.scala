@@ -2,7 +2,7 @@ package com.boldradius.sdf.akka
 
 import java.util.concurrent.TimeUnit
 
-import akka.actor.{ActorRef, Props, ActorLogging, Actor}
+import akka.actor._
 import com.boldradius.sdf.akka.SessionTracker.CheckSessionActivity
 
 import scala.concurrent.duration.FiniteDuration
@@ -22,11 +22,13 @@ class SessionTracker(statsActor: ActorRef, sessionTimeout: FiniteDuration) exten
 
   // List of Requests made by within a unique session ID
   var requests = List.empty[Request]
+  var myTimer: Option[Cancellable] = None
 
   override def receive: Receive = {
     case x: Request =>
+      myTimer.map(timer => timer.cancel)
       requests = requests :+ x
-      context.system.scheduler.scheduleOnce(sessionTimeout, self, CheckSessionActivity(requests.size))
+      myTimer = Some(context.system.scheduler.scheduleOnce(sessionTimeout, self, CheckSessionActivity(requests.size)))
     case CheckSessionActivity(oldRequestSize) =>
       if (requests.size == oldRequestSize){
         statsActor ! requests

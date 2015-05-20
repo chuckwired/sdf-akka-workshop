@@ -63,8 +63,8 @@ class SessionTrackerSpec extends BaseAkkaSpec {
       statsActor.watch(sessionTracker)
       sessionTracker ! requests.last
 
-      new TestKit(system).within(FiniteDuration(2, "seconds"), FiniteDuration(3, "seconds")) {
-        statsActor expectMsg List(requests.last)
+      new TestKit(system).within(FiniteDuration(1800, "milliseconds"), FiniteDuration(3, "seconds")) {
+        val receivedList = statsActor expectMsg List(requests.last)
         statsActor.expectTerminated(sessionTracker)
       }
     }
