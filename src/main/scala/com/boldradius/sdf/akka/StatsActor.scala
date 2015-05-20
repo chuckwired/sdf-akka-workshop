@@ -16,7 +16,8 @@ class StatsActor extends Actor with ActorLogging {
   }
 
   def calculateRequestsPerBrowser(reqs: List[Request]): Map[String, Int] = {
-    val count = for (browser <- Session.browsers) yield browser -> reqs.count(req => req.browser == browser)
+    val count = for {browser <- Session.browsers} yield browser -> reqs.count(req => req.browser == browser)
     count.toMap
+
   }
 }
