@@ -11,6 +11,8 @@ class StatsActorSpec extends BaseAkkaSpec {
       val st: StatsActor = statsActor.underlyingActor
       val requestsPerBrowser = st.calculateRequestsPerBrowser(TestData.requests)
 
+      val a = TestData.requests
+
       println(requestsPerBrowser)
 //      rc.sessionStorage.size shouldBe 1
     }

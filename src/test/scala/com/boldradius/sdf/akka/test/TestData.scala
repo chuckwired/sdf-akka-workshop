@@ -8,11 +8,14 @@ import scala.concurrent.duration.FiniteDuration
 
 
 object TestData {
-  val requests = List(Request(1, 1, Session.urls(4), Session.referrers(8), Session.browsers(5)),
-                        Request(2, 2, Session.urls(1), Session.referrers(1), Session.browsers(3)),
-                        Request(3, 3, Session.urls(2), Session.referrers(2), Session.browsers(2)),
-                        Request(4, 4, Session.urls(1), Session.referrers(1), Session.browsers(3)),
-                        Request(5, 5, Session.urls(4), Session.referrers(8), Session.browsers(5)))
+  val requests = List(Request(1, 1432197362, Session.urls(4), "google", "chrome"),
+                        Request(2, 1432197378, Session.urls(1), "google", "chrome"),
+                        Request(3, 1432197389, Session.urls(2), "facebook", "firefox"),
+                        Request(4, 1432197433, Session.urls(1), "google", "ie"),
+                        Request(5, 1432197433, Session.urls(4), "twitter", "chrome"))
 
   val testSessionTimeout = FiniteDuration(2, TimeUnit.SECONDS)
 }
+
+
+
