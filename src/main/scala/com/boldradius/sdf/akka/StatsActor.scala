@@ -4,8 +4,8 @@ import akka.actor._
 
 import com.boldradius.sdf.akka.StatsActor.{SendRequests, SaveSessions, BusiestMinute, StatsActorError}
 import scala.concurrent.duration.FiniteDuration
-import play.api.libs.json._
-
+import play.api.libs.json.{JsNumber, JsValue, Json, JsArray}
+import scala.concurrent.ExecutionContext.Implicits.global
 
 
 object StatsActor {
@@ -17,7 +17,7 @@ object StatsActor {
    *  Statistics protocol
    */
   case class BusiestMinute(minute: Long, numberOfRequests: Int){
-    def toMap: Map[Long, Int] = Map[Long,Int](minute -> numberOfRequests)
+    val toJson = JsArray(Seq(JsNumber(minute), JsNumber(numberOfRequests)))
   }
 
   case object StatsActorError extends IllegalStateException("An artificial error occured.")
@@ -40,18 +40,17 @@ class StatsActor extends Actor with ActorLogging {
   def receive: Receive = {
     case SendRequests(reqs) => sessions = sessions :+ SessionHistory(reqs)
     case StatsActorError => throw StatsActorError
-    case message => log.debug(s"Stats has received: $message")
     case SaveSessions =>
       saveSessionsToFile(sessions)
       context.system.scheduler.scheduleOnce(FiniteDuration(30, "seconds"), self, SaveSessions)
+    case message => log.debug(s"Stats has received: $message")
   }
-
 
   def saveSessionsToFile(sessions: List[SessionHistory]) = {
     val sessionAsJson = Json.obj("requestsPerBrowser" -> calculateRequestsPerBrowser(sessions),
             "visitedPagesByPercentage" -> calculatePageVisitPercentage(sessions),
             "visitsTimePerUrl" -> calculateVisitTimePerURL(sessions),
-//            "busiestMinutes" -> calculateBusiestMinute(sessions).toMap,
+            "busiestMinutes" -> calculateBusiestMinute(sessions).toJson,
             "top2browsers" -> calculateTop2browsers(sessions),
             "top2referrers" -> calculateTop2referrers(sessions),
             "top3landingPages" -> calculateTop3landingPages(sessions),
