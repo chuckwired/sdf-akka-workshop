@@ -43,7 +43,7 @@ object TestData {
                         Request(5, 1432197389, "/store", "facebook", "firefox"),
                         Request(5, 1432127433, "/", "google", "ie"),
                         Request(5, 1432127433, "/", "twitter", "chrome"),
-                        Request(5, 1432127433, "/t", "twitter", "firefox"))
+                        Request(5, 1432127433, "/", "twitter", "firefox"))
 
   val requests6 = List(Request(6, 1422197362, "/about", "google", "chrome"),
                         Request(6, 1432117378, "/store", "google", "chrome"),

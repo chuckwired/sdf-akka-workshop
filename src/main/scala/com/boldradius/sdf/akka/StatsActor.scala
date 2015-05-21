@@ -29,7 +29,7 @@ class StatsActor extends Actor with ActorLogging {
    * Statistics calulations
    */
   def calculateRequestsPerBrowser(sessions: List[SessionHistory]): Map[String, Int] = {
-    val count = for {browser <- Session.browsers} yield browser ->
+    val count = for {browser:String <- Session.browsers.toSet} yield browser ->
                                       sessions.flatMap(sessionHistory => sessionHistory.getRequests).
                                         count(req => req.browser == browser)
     count.toMap
@@ -52,7 +52,7 @@ class StatsActor extends Actor with ActorLogging {
   }
 
   def top2referrers(sessions: List[SessionHistory]): List[String] = {
-    val countedReferrers = for {referrer <- Session.referrers} yield referrer ->
+    val countedReferrers = for {referrer:String <- Session.referrers.toSet} yield referrer ->
                                 sessions.flatMap(sessionHistory => sessionHistory.getRequests).
                                   count(req => req.referrer == referrer)
     var referrers = countedReferrers.toMap
@@ -66,8 +66,8 @@ class StatsActor extends Actor with ActorLogging {
   }
 
   def top3landingPages(sessions: List[SessionHistory]): List[String] = {
-    var landingPages = for {url <- Session.urls} yield url ->
-      sessions.flatMap(sessionHistory => sessionHistory.getRequests).
+    var landingPages = for {url:String <- Session.urls.toSet} yield url ->
+      sessions.map(sessionHistory => sessionHistory.getRequests.head).
         count(req => req.url == url)
 
     var top3 = List.empty[String]
@@ -75,6 +75,22 @@ class StatsActor extends Actor with ActorLogging {
     for(i <- 0 to 2){
       top3 = top3 :+ landingPages.maxBy(_._2)._1
       landingPages = landingPages.filter(_._1 != top3(i))
+    }
+
+    top3
+  }
+
+  def top3sinkPages(sessions: List[SessionHistory]): List[String] = {
+    var sinkPages = for {url:String <- Session.urls.toSet} yield url ->
+      sessions.map(sessionHistory => sessionHistory.getRequests.last).
+        count(req => req.url == url)
+
+    println(sinkPages)
+    var top3 = List.empty[String]
+
+    for(i <- 0 to 2){
+      top3 = top3 :+ sinkPages.maxBy(_._2)._1
+      sinkPages = sinkPages.filter(_._1 != top3(i))
     }
 
     top3
