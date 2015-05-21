@@ -15,27 +15,27 @@ class StatsActorSpec extends BaseAkkaSpec {
 
   "The StatsActor" should {
     "calculate requests per browser" in new StatsActorSetup {
-      val requestsPerBrowser = statsActor.calculateRequestsPerBrowser(TestData.requests)
-      requestsPerBrowser("chrome") shouldBe 3
-      requestsPerBrowser("firefox") shouldBe 2
-      requestsPerBrowser("ie") shouldBe 1
+      val requestsPerBrowser = statsActor.calculateRequestsPerBrowser(TestData.sessions)
+      requestsPerBrowser("chrome") shouldBe 9
+      requestsPerBrowser("firefox") shouldBe 6
+      requestsPerBrowser("ie") shouldBe 3
     }
 
     "calculate visits percentage per browser" in new StatsActorSetup {
-      val visistsPercentage = statsActor.calculatePageVisitPercentage(TestData.requests)
+      val visistsPercentage = statsActor.calculatePageVisitPercentage(TestData.sessions)
       visistsPercentage("chrome") shouldBe 50
       visistsPercentage("firefox") shouldBe 33
       visistsPercentage("ie") shouldBe 16
     }
 
     "calculate top2 browsers" in new StatsActorSetup {
-      val top2browsers = statsActor.top2browsers(TestData.requests)
+      val top2browsers = statsActor.top2browsers(TestData.sessions)
       top2browsers(0) shouldBe "chrome"
       top2browsers(1) shouldBe "firefox"
     }
 
     "calculate top2 referrers" in new StatsActorSetup {
-      val top2referrers = statsActor.top2referrers(TestData.requests)
+      val top2referrers = statsActor.top2referrers(TestData.sessions)
       top2referrers(0) shouldBe "google"
       top2referrers(1) shouldBe "twitter"
     }
