@@ -1,9 +1,15 @@
 package com.boldradius.sdf.akka
 
 import akka.actor._
+import com.boldradius.sdf.akka.StatsActor.BusiestMinute
 
 object StatsActor {
   def props = Props[StatsActor]
+
+  /**
+   *  Statistics protocol
+   */
+  case class BusiestMinute(minute: Long, numberOfRequests: Int)
 }
 
 // Mr Dummy Consumer simply shouts to the log the messages it receives
@@ -19,7 +25,7 @@ class StatsActor extends Actor with ActorLogging {
     val count = for {browser <- Session.browsers} yield browser -> reqs.count(req => req.browser == browser)
     count.toMap
   }
-
+  
   def calculatePageVisitPercentage(reqs: List[Request]): Map[String,Int] = {
     val visits: Map[String,Int] = calculateRequestsPerBrowser(reqs)
     val totalVisits: Int = visits.map(el => el._2).sum
@@ -46,5 +52,12 @@ class StatsActor extends Actor with ActorLogging {
     referrers = referrers.filter(_._1 != top2.head)
     top2 = top2 :+ referrers.maxBy(_._2)._1
     top2
+  }
+
+  def calculateBusiestMinute(reqs: List[Request]): BusiestMinute = {
+    val busiest = reqs.map(req => req.copy(timestamp = req.timestamp / (1000 * 60))).
+      groupBy(req => req.timestamp)
+    val record = busiest.maxBy(_._2.size)
+    BusiestMinute(record._1, record._2.size)
   }
 }
