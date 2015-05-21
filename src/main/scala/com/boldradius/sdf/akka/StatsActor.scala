@@ -25,6 +25,9 @@ class StatsActor extends Actor with ActorLogging {
     case message => log.debug(s"Stats has received: $message")
   }
 
+  /**
+   * Statistics calulations
+   */
   def calculateRequestsPerBrowser(sessions: List[SessionHistory]): Map[String, Int] = {
     val count = for {browser <- Session.browsers} yield browser ->
                                       sessions.flatMap(sessionHistory => sessionHistory.getRequests).
@@ -85,7 +88,15 @@ class StatsActor extends Actor with ActorLogging {
     BusiestMinute(record._1, record._2.size)
   }
 
-  def calculateVisitTimePerURL(reqs: List[Request]) = {
-    reqs.groupBy(req => req.url)
+  /**
+   * Calculates average visit time for each url.
+   * Note that sink pages automatically have a visit time of 0.
+   */
+  def calculateVisitTimePerURL(reqs: List[SessionHistory]): Map[String, Long] = {
+    val listOfVisits = reqs.map(ses => Visit.fromRequests(ses.getRequests)).flatten
+    val mapByUrl = listOfVisits.groupBy(visit => visit.request.url)
+    mapByUrl.map(entry =>
+      entry._1 -> entry._2.foldLeft(0L)((acc, vis) => acc + vis.duration) / entry._2.size
+    )
   }
 }
