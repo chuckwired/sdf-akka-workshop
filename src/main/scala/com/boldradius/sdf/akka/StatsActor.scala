@@ -12,12 +12,16 @@ object StatsActor {
   case class BusiestMinute(minute: Long, numberOfRequests: Int)
 }
 
+case class SessionHistory(requests: List[Request]) {
+  def getRequests = requests
+}
+
 // Mr Dummy Consumer simply shouts to the log the messages it receives
 class StatsActor extends Actor with ActorLogging {
-  var requests:List[Request] = List.empty[Request]
+  var sessions: List[SessionHistory] = List.empty
 
   def receive: Receive = {
-    case reqs: List[Request] => requests = requests ++ reqs
+    case reqs: List[Request] => sessions = sessions :+ SessionHistory(reqs)
     case message => log.debug(s"Stats has received: $message")
   }
 
