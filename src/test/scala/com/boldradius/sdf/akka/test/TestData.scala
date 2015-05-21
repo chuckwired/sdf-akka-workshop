@@ -13,7 +13,8 @@ object TestData {
                         Request(2, 1432117378, Session.urls(1), "google", "chrome"),
                         Request(3, 1432197389, Session.urls(2), "facebook", "firefox"),
                         Request(4, 1432127433, Session.urls(1), "google", "ie"),
-                        Request(5, 1432127433, Session.urls(4), "twitter", "chrome"))
+                        Request(5, 1432127433, Session.urls(4), "twitter", "chrome"),
+                        Request(6, 1432127433, Session.urls(4), "twitter", "firefox"))
 
   val testSessionTimeout = FiniteDuration(2, TimeUnit.SECONDS)
 }

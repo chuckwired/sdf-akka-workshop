@@ -14,7 +14,6 @@ class StatsActorSpec extends BaseAkkaSpec {
       val visistsPercentage = st.calculatePageVisitPercentage(TestData.requests)
       var top2browsers = st.top2browsers(TestData.requests)
       var top2referrers = st.top2referrers(TestData.requests)
-      val requestsPerBrowser = st.calculateRequestsPerBrowser(requests)
 
       val a = TestData.requests
 
