@@ -51,5 +51,12 @@ class StatsActorSpec extends BaseAkkaSpec {
       top3landingPages(1) shouldBe "/"
       top3landingPages(2) shouldBe "/about"
     }
+
+    "calculate top3 sink pages" in new StatsActorSetup {
+      val top3sinkPages = statsActor.top3sinkPages(sessions)
+      top3sinkPages(0) shouldBe "/about"
+      top3sinkPages(1) shouldBe "/"
+      top3sinkPages(2) shouldBe "/store"
+    }
   }
 }
