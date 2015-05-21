@@ -13,7 +13,7 @@ object StatsActor {
 }
 
 case class SessionHistory(requests: List[Request]) {
-  def getRequests = requests
+  def getRequests: List[Request] = requests
 }
 
 // Mr Dummy Consumer simply shouts to the log the messages it receives
@@ -61,6 +61,22 @@ class StatsActor extends Actor with ActorLogging {
     top2 = top2 :+ referrers.maxBy(_._2)._1
     top2
   }
+
+  def top3landingPages(sessions: List[SessionHistory]): List[String] = {
+    var landingPages = for {url <- Session.urls} yield url ->
+      sessions.flatMap(sessionHistory => sessionHistory.getRequests).
+        count(req => req.url == url)
+
+    var top3 = List.empty[String]
+
+    for(i <- 0 to 2){
+      top3 = top3 :+ landingPages.maxBy(_._2)._1
+      landingPages = landingPages.filter(_._1 != top3(i))
+    }
+
+    top3
+  }
+
 
   def calculateBusiestMinute(reqs: List[Request]): BusiestMinute = {
     val busiest = reqs.map(req => req.copy(timestamp = req.timestamp / (1000 * 60))).

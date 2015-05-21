@@ -26,7 +26,7 @@ class SessionTrackerSpec extends BaseAkkaSpec {
       val statsActor = TestProbe()
 
       val sessionTracker = TestActorRef(SessionTracker.props(statsActor.ref, testSessionTimeout))
-      sessionTracker.receive(requests(0))
+      sessionTracker.receive(sessions(0).getRequests.head)
       val st: SessionTracker = sessionTracker.underlyingActor
       st.requests.length shouldBe 1
     }
@@ -35,10 +35,10 @@ class SessionTrackerSpec extends BaseAkkaSpec {
       val statsActor = TestProbe()
 
       val sessionTracker = TestActorRef(SessionTracker.props(statsActor.ref, testSessionTimeout))
-      sessionTracker.receive(requests(0))
+      sessionTracker.receive(sessions(0).getRequests.head)
       sessionTracker.receive(CheckSessionActivity(1))
 
-      statsActor expectMsg List(requests.head)
+      statsActor expectMsg List(sessions(0).getRequests.head)
 
     }
 
@@ -61,10 +61,10 @@ class SessionTrackerSpec extends BaseAkkaSpec {
 
       //Watch the sessionTracker
       statsActor.watch(sessionTracker)
-      sessionTracker ! requests.last
+      sessionTracker ! sessions(0).getRequests.head
 
       new TestKit(system).within(FiniteDuration(1800, "milliseconds"), FiniteDuration(3, "seconds")) {
-        val receivedList = statsActor expectMsg List(requests.last)
+        val receivedList = statsActor expectMsg List(sessions(0).getRequests.head)
         statsActor.expectTerminated(sessionTracker)
       }
     }

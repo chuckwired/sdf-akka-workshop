@@ -8,14 +8,14 @@ class RequestConsumerSpec extends BaseAkkaSpec {
   "Sending Request" should {
     "result in RequestConsumer with 1 sessionStorage element" in {
       val requestConsumer = TestActorRef(RequestConsumer.props)
-      requestConsumer.receive(TestData.requests(0))
+      requestConsumer.receive(TestData.sessions(0).getRequests.head)
       val rc: RequestConsumer = requestConsumer.underlyingActor
       rc.sessionStorage.size shouldBe 1
     }
 
     """result in RequestConsumer with 1 sessionStorage with an Actor named "st-1" """ in {
       val requestConsumer = TestActorRef(RequestConsumer.props)
-      requestConsumer.receive(TestData.requests(0))
+      requestConsumer.receive(TestData.sessions(0).getRequests.head)
       val rc: RequestConsumer = requestConsumer.underlyingActor
       rc.sessionStorage(1).path.name shouldBe "st-" + 1
     }
