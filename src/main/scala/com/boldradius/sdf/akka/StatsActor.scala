@@ -2,7 +2,7 @@ package com.boldradius.sdf.akka
 import java.io._
 import akka.actor._
 
-import com.boldradius.sdf.akka.StatsActor.{SendRequests, SaveSessions, BusiestMinute, StatsActorError}
+import com.boldradius.sdf.akka.StatsActor.{SendRequests, SaveStatistics, BusiestMinute, StatsActorError}
 import scala.concurrent.duration.FiniteDuration
 import play.api.libs.json.{JsNumber, JsValue, Json, JsArray}
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -11,7 +11,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 object StatsActor {
   def props = Props[StatsActor]
 
-  case object SaveSessions
+  case object SaveStatistics
   case class SendRequests(regs: List[Request])
   /**
    *  Statistics protocol
@@ -35,19 +35,19 @@ case class SessionHistory(requests: List[Request]) {
 class StatsActor extends Actor with ActorLogging {
   var sessions: List[SessionHistory] = List.empty
 
-  self ! SaveSessions
+  self ! SaveStatistics
 
   def receive: Receive = {
     case SendRequests(reqs) => sessions = sessions :+ SessionHistory(reqs)
     case StatsActorError => throw StatsActorError
-    case SaveSessions =>
-      saveSessionsToFile(sessions)
-      context.system.scheduler.scheduleOnce(FiniteDuration(30, "seconds"), self, SaveSessions)
+    case SaveStatistics =>
+      saveStatistics(sessions)
+      context.system.scheduler.scheduleOnce(FiniteDuration(30, "seconds"), self, SaveStatistics)
     case message => log.debug(s"Stats has received: $message")
   }
 
-  def saveSessionsToFile(sessions: List[SessionHistory]) = {
-    val sessionAsJson = Json.obj("requestsPerBrowser" -> calculateRequestsPerBrowser(sessions),
+  def saveStatistics(sessions: List[SessionHistory]) = {
+    val statistics = Json.obj("requestsPerBrowser" -> calculateRequestsPerBrowser(sessions),
             "visitedPagesByPercentage" -> calculatePageVisitPercentage(sessions),
             "visitsTimePerUrl" -> calculateVisitTimePerURL(sessions),
             "busiestMinutes" -> calculateBusiestMinute(sessions).toJson,
@@ -56,8 +56,8 @@ class StatsActor extends Actor with ActorLogging {
             "top3landingPages" -> calculateTop3landingPages(sessions),
             "top3sinkPages" -> calculateTop3sinkPages(sessions))
 
-    val pw = new PrintWriter(new File("session.txt" ))
-    pw.write(sessionAsJson.toString())
+    val pw = new PrintWriter(new File("statistics.txt" ))
+    pw.write(statistics.toString())
     pw.close
   }
 
