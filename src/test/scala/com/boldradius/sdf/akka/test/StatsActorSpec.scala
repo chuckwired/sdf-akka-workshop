@@ -1,17 +1,14 @@
 package com.boldradius.sdf.akka.test
 
 import akka.actor.ActorSystem
-import akka.testkit.TestActorRef
+import akka.testkit.{EventFilter, TestProbe, TestKit, TestActorRef}
 import com.boldradius.sdf.akka._
 import com.boldradius.sdf.akka.test.TestData._
 
+import scala.concurrent.duration.FiniteDuration
 
 
 class StatsActorSpec extends BaseAkkaSpec {
-  trait StatsActorSetup {
-    val st = TestActorRef(StatsActor.props)
-    val statsActor: StatsActor = st.underlyingActor
-  }
 
   "The StatsActor" should {
     "calculate requests per browser" in new StatsActorSetup {
@@ -65,9 +62,20 @@ class StatsActorSpec extends BaseAkkaSpec {
 
     "calculate average visit time per url" in new StatsActorSetup {
       val averagePerUrl = statsActor.calculateVisitTimePerURL(sessions)
-      averagePerUrl shouldEqual Map("/about" -> 1984003, "/" -> 1167060, "/t" -> 0, "/store" -> 2092128)
+      averagePerUrl shouldEqual Map("/about" -> 1984003, "/" -> 1102224, "/store" -> 2092128)
     }
 
+    "have an email produced when terminated" in {
+      val requestConsumer: TestActorRef[RequestConsumer] = TestActorRef(RequestConsumer.props)
+
+      EventFilter.error("TO admin@app.com: BRO the StatsActor can't be automatically resuscitated, fix it!") intercept
+        system.stop(requestConsumer.underlyingActor.statsActor)
+    }
+
+    trait StatsActorSetup {
+      val st = TestActorRef(StatsActor.props)
+      val statsActor: StatsActor = st.underlyingActor
+    }
 
   }
 }

@@ -1,7 +1,7 @@
 package com.boldradius.sdf.akka
 
 import akka.actor._
-import com.boldradius.sdf.akka.StatsActor.BusiestMinute
+import com.boldradius.sdf.akka.StatsActor.{StatsActorError, BusiestMinute}
 
 object StatsActor {
   def props = Props[StatsActor]
@@ -10,18 +10,21 @@ object StatsActor {
    *  Statistics protocol
    */
   case class BusiestMinute(minute: Long, numberOfRequests: Int)
+
+  case object StatsActorError extends IllegalStateException("An artificial error occured.")
 }
 
 case class SessionHistory(requests: List[Request]) {
   def getRequests: List[Request] = requests
 }
 
-// Mr Dummy Consumer simply shouts to the log the messages it receives
+// Collects and calculates lots of different statistics
 class StatsActor extends Actor with ActorLogging {
   var sessions: List[SessionHistory] = List.empty
 
   def receive: Receive = {
     case reqs: List[Request] => sessions = sessions :+ SessionHistory(reqs)
+    case StatsActorError => throw StatsActorError
     case message => log.debug(s"Stats has received: $message")
   }
 
