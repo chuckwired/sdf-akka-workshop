@@ -31,7 +31,7 @@ class SessionTracker(statsActor: ActorRef, sessionTimeout: FiniteDuration) exten
       myTimer = Some(context.system.scheduler.scheduleOnce(sessionTimeout, self, CheckSessionActivity(requests.size)))
     case CheckSessionActivity(oldRequestSize) =>
       if (requests.size == oldRequestSize){
-        statsActor ! requests
+        statsActor ! StatsActor.SendRequests(requests)
         context.stop(self)
       }
   }

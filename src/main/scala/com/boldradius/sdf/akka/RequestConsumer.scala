@@ -3,7 +3,7 @@ package com.boldradius.sdf.akka
 import java.util.concurrent.TimeUnit
 
 import akka.actor._
-import com.boldradius.sdf.akka.Request
+//import com.boldradius.sdf.akka
 
 import scala.concurrent.duration.{Duration, FiniteDuration}
 

@@ -29,13 +29,13 @@ class StatsActorSpec extends BaseAkkaSpec {
     }
 
     "calculate top2 browsers" in new StatsActorSetup {
-      val top2browsers = statsActor.top2browsers(sessions)
+      val top2browsers = statsActor.calculateTop2browsers(sessions)
       top2browsers(0) shouldBe "chrome"
       top2browsers(1) shouldBe "firefox"
     }
 
     "calculate top2 referrers" in new StatsActorSetup {
-      val top2referrers = statsActor.top2referrers(sessions)
+      val top2referrers = statsActor.calculateTop2referrers(sessions)
       top2referrers(0) shouldBe "google"
       top2referrers(1) shouldBe "twitter"
     }
@@ -46,14 +46,14 @@ class StatsActorSpec extends BaseAkkaSpec {
     }
 
     "calculate top3 landing pages" in new StatsActorSetup {
-      val top3landingPages = statsActor.top3landingPages(sessions)
+      val top3landingPages = statsActor.calculateTop3landingPages(sessions)
       top3landingPages(0) shouldBe "/store"
       top3landingPages(1) shouldBe "/"
       top3landingPages(2) shouldBe "/about"
     }
 
     "calculate top3 sink pages" in new StatsActorSetup {
-      val top3sinkPages = statsActor.top3sinkPages(sessions)
+      val top3sinkPages = statsActor.calculateTop3sinkPages(sessions)
       top3sinkPages(0) shouldBe "/about"
       top3sinkPages(1) shouldBe "/"
       top3sinkPages(2) shouldBe "/store"
