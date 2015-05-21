@@ -25,19 +25,21 @@ class StatsActor extends Actor with ActorLogging {
     case message => log.debug(s"Stats has received: $message")
   }
 
-  def calculateRequestsPerBrowser(reqs: List[Request]): Map[String, Int] = {
-    val count = for {browser <- Session.browsers} yield browser -> reqs.count(req => req.browser == browser)
+  def calculateRequestsPerBrowser(sessions: List[SessionHistory]): Map[String, Int] = {
+    val count = for {browser <- Session.browsers} yield browser ->
+                                      sessions.flatMap(sessionHistory => sessionHistory.getRequests).
+                                        count(req => req.browser == browser)
     count.toMap
   }
 
-  def calculatePageVisitPercentage(reqs: List[Request]): Map[String,Int] = {
-    val visits: Map[String,Int] = calculateRequestsPerBrowser(reqs)
+  def calculatePageVisitPercentage(sessions: List[SessionHistory]): Map[String,Int] = {
+    val visits: Map[String,Int] = calculateRequestsPerBrowser(sessions)
     val totalVisits: Int = visits.map(el => el._2).sum
     visits.map(element => (element._1 -> (element._2*100 / totalVisits)))
   }
 
-  def top2browsers(reqs: List[Request]): List[String] = {
-    var browsers = calculateRequestsPerBrowser(reqs)
+  def top2browsers(sessions: List[SessionHistory]): List[String] = {
+    var browsers = calculateRequestsPerBrowser(sessions)
     var top2 = List.empty[String]
       top2 = top2 :+ browsers.maxBy(_._2)._1
 
@@ -46,8 +48,10 @@ class StatsActor extends Actor with ActorLogging {
     top2
   }
 
-  def top2referrers(reqs: List[Request]): List[String] = {
-    val countedReferrers = for {referrer <- Session.referrers} yield referrer -> reqs.count(req => req.referrer == referrer)
+  def top2referrers(sessions: List[SessionHistory]): List[String] = {
+    val countedReferrers = for {referrer <- Session.referrers} yield referrer ->
+                                sessions.flatMap(sessionHistory => sessionHistory.getRequests).
+                                  count(req => req.referrer == referrer)
     var referrers = countedReferrers.toMap
 
     var top2 = List.empty[String]
