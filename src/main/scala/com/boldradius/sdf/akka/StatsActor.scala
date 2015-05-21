@@ -60,4 +60,8 @@ class StatsActor extends Actor with ActorLogging {
     val record = busiest.maxBy(_._2.size)
     BusiestMinute(record._1, record._2.size)
   }
+
+  def calculateVisitTimePerURL(reqs: List[Request]) = {
+    reqs.groupBy(req => req.url)
+  }
 }
