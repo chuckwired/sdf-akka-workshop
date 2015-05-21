@@ -1,10 +1,12 @@
 package com.boldradius.sdf.akka
 import java.io._
 import akka.actor._
-import com.boldradius.sdf.akka.StatsActor.{SendRequests, SaveSessions, BusiestMinute}
 
+import com.boldradius.sdf.akka.StatsActor.{SendRequests, SaveSessions, BusiestMinute, StatsActorError}
 import scala.concurrent.duration.FiniteDuration
 import play.api.libs.json._
+
+
 
 object StatsActor {
   def props = Props[StatsActor]
@@ -15,6 +17,8 @@ object StatsActor {
    *  Statistics protocol
    */
   case class BusiestMinute(minute: Long, numberOfRequests: Int)
+
+  case object StatsActorError extends IllegalStateException("An artificial error occured.")
 }
 
 
@@ -24,8 +28,8 @@ case class SessionHistory(requests: List[Request]) {
 }
 
 
+// Collects and calculates lots of different statistics
 
-// Mr Dummy Consumer simply shouts to the log the messages it receives
 class StatsActor extends Actor with ActorLogging {
   var sessions: List[SessionHistory] = List.empty
 
@@ -33,24 +37,17 @@ class StatsActor extends Actor with ActorLogging {
 
   def receive: Receive = {
     case SendRequests(reqs) => sessions = sessions :+ SessionHistory(reqs)
+    case StatsActorError => throw StatsActorError
     case message => log.debug(s"Stats has received: $message")
     case SaveSessions => saveSessionsToFile(sessions)
   }
 
 
   def saveSessionsToFile(sessions: List[SessionHistory]) = {
-    val requestsPerBrowser = calculateRequestsPerBrowser(sessions)
-    val visitedPagesByPercentage = calculatePageVisitPercentage(sessions)
-    val busiestMinutes = calculateBusiestMinute(sessions(0).getRequests)
-    val visitsTimePerUrl = calculateVisitTimePerURL(sessions)
-    val top2browsers = calculateTop2browsers(sessions)
-    val top2referrers = calculateTop2referrers(sessions)
-    val top3landingPages = calculateTop3landingPages(sessions)
-    var top3sinkPages = calculateTop3sinkPages(sessions)
-
     val sessionAsJson = Json.obj("requestsPerBrowser" -> calculateRequestsPerBrowser(sessions),
             "visitedPagesByPercentage" -> calculatePageVisitPercentage(sessions),
             "visitsTimePerUrl" -> calculateVisitTimePerURL(sessions),
+//            "busiestMinutes" -> calculateBusiestMinute(sessions)
             "top2browsers" -> calculateTop2browsers(sessions),
             "top2referrers" -> calculateTop2referrers(sessions),
             "top3landingPages" -> calculateTop3landingPages(sessions),
@@ -135,7 +132,8 @@ class StatsActor extends Actor with ActorLogging {
   }
 
 
-  def calculateBusiestMinute(reqs: List[Request]): BusiestMinute = {
+  def calculateBusiestMinute(sessions: List[SessionHistory]): BusiestMinute = {
+    val reqs = sessions.flatMap(x => x.getRequests)
     val busiest = reqs.map(req => req.copy(timestamp = req.timestamp / (1000 * 60))).
       groupBy(req => req.timestamp)
     val record = busiest.maxBy(_._2.size)
