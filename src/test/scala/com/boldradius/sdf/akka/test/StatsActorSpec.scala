@@ -58,5 +58,16 @@ class StatsActorSpec extends BaseAkkaSpec {
       top3sinkPages(1) shouldBe "/"
       top3sinkPages(2) shouldBe "/store"
     }
+
+    "create Visit correctly" in {
+      Visit.fromRequests(requests1).last shouldEqual Visit.fromRequests(List(requests1.last)).last
+    }
+
+    "calculate average visit time per url" in new StatsActorSetup {
+      val averagePerUrl = statsActor.calculateVisitTimePerURL(sessions)
+      averagePerUrl shouldEqual Map("/about" -> 1984003, "/" -> 1167060, "/t" -> 0, "/store" -> 2092128)
+    }
+
+
   }
 }
