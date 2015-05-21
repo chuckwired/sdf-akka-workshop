@@ -16,7 +16,9 @@ object StatsActor {
   /**
    *  Statistics protocol
    */
-  case class BusiestMinute(minute: Long, numberOfRequests: Int)
+  case class BusiestMinute(minute: Long, numberOfRequests: Int){
+    def toMap: Map[Long, Int] = Map[Long,Int](minute -> numberOfRequests)
+  }
 
   case object StatsActorError extends IllegalStateException("An artificial error occured.")
 }
@@ -39,7 +41,9 @@ class StatsActor extends Actor with ActorLogging {
     case SendRequests(reqs) => sessions = sessions :+ SessionHistory(reqs)
     case StatsActorError => throw StatsActorError
     case message => log.debug(s"Stats has received: $message")
-    case SaveSessions => saveSessionsToFile(sessions)
+    case SaveSessions =>
+      saveSessionsToFile(sessions)
+      context.system.scheduler.scheduleOnce(FiniteDuration(30, "seconds"), self, SaveSessions)
   }
 
 
@@ -47,7 +51,7 @@ class StatsActor extends Actor with ActorLogging {
     val sessionAsJson = Json.obj("requestsPerBrowser" -> calculateRequestsPerBrowser(sessions),
             "visitedPagesByPercentage" -> calculatePageVisitPercentage(sessions),
             "visitsTimePerUrl" -> calculateVisitTimePerURL(sessions),
-//            "busiestMinutes" -> calculateBusiestMinute(sessions)
+//            "busiestMinutes" -> calculateBusiestMinute(sessions).toMap,
             "top2browsers" -> calculateTop2browsers(sessions),
             "top2referrers" -> calculateTop2referrers(sessions),
             "top3landingPages" -> calculateTop3landingPages(sessions),
@@ -56,7 +60,6 @@ class StatsActor extends Actor with ActorLogging {
     val pw = new PrintWriter(new File("session.txt" ))
     pw.write(sessionAsJson.toString())
     pw.close
-//    context.system.scheduler.scheduleOnce(FiniteDuration(30, "seconds"), self, SaveSessions)
   }
 
 
