@@ -25,7 +25,7 @@ class StatsActor extends Actor with ActorLogging {
     val count = for {browser <- Session.browsers} yield browser -> reqs.count(req => req.browser == browser)
     count.toMap
   }
-  
+
   def calculatePageVisitPercentage(reqs: List[Request]): Map[String,Int] = {
     val visits: Map[String,Int] = calculateRequestsPerBrowser(reqs)
     val totalVisits: Int = visits.map(el => el._2).sum

@@ -5,7 +5,7 @@ import com.boldradius.sdf.akka._
 import com.boldradius.sdf.akka.test.TestData._
 
 
-class StatsActorSpec extends BaseAkkaSpec {
+class StatsActorSpec extends BaseAkkaSpec with StatsActorSetup {
   "The StatsActor" should {
     "result in RequestConsumer with 1 sessionStorage element" in {
       val statsActor = TestActorRef(StatsActor.props)
@@ -23,9 +23,7 @@ class StatsActorSpec extends BaseAkkaSpec {
     }
 
     "calculate the busiest minute" in {
-      val statsActor = TestActorRef(StatsActor.props)
-      val st: StatsActor = statsActor.underlyingActor
-      val busiestMinute = st.calculateBusiestMinute(requests)
+      val busiestMinute = statsActor.calculateBusiestMinute(requests)
       busiestMinute.minute shouldBe 23868
     }
 
