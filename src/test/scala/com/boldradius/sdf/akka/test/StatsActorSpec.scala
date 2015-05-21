@@ -41,7 +41,7 @@ class StatsActorSpec extends BaseAkkaSpec {
     }
 
     "calculate the busiest minute" in new StatsActorSetup {
-      val busiestMinute = statsActor.calculateBusiestMinute(sessions(0).getRequests)
+      val busiestMinute = statsActor.calculateBusiestMinute(List(sessions.head))
       busiestMinute.minute shouldBe 23868
     }
 

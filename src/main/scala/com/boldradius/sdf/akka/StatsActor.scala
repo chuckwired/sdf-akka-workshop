@@ -81,7 +81,8 @@ class StatsActor extends Actor with ActorLogging {
   }
 
 
-  def calculateBusiestMinute(reqs: List[Request]): BusiestMinute = {
+  def calculateBusiestMinute(sessions: List[SessionHistory]): BusiestMinute = {
+    val reqs = sessions.flatMap(x => x.getRequests)
     val busiest = reqs.map(req => req.copy(timestamp = req.timestamp / (1000 * 60))).
       groupBy(req => req.timestamp)
     val record = busiest.maxBy(_._2.size)
