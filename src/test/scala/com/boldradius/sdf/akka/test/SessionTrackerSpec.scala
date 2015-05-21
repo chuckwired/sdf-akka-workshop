@@ -2,6 +2,7 @@ package com.boldradius.sdf.akka.test
 
 import java.util.concurrent.TimeUnit
 
+import com.boldradius.sdf.akka.StatsActor.SendRequests
 import com.boldradius.sdf.akka.{Request, SessionTracker}
 import akka.testkit.{TestKit, TestProbe, TestActorRef}
 import akka.testkit.TestKit._
@@ -38,7 +39,7 @@ class SessionTrackerSpec extends BaseAkkaSpec {
       sessionTracker.receive(sessions(0).getRequests.head)
       sessionTracker.receive(CheckSessionActivity(1))
 
-      statsActor expectMsg List(sessions(0).getRequests.head)
+      statsActor expectMsg SendRequests(List(sessions(0).getRequests.head))
 
     }
 
@@ -50,7 +51,7 @@ class SessionTrackerSpec extends BaseAkkaSpec {
       statsActor.watch(sessionTracker)
       sessionTracker ! CheckSessionActivity(0)
 
-      statsActor expectMsg List()
+      statsActor expectMsg SendRequests(List())
       statsActor.expectTerminated(sessionTracker)
 
     }
@@ -64,7 +65,7 @@ class SessionTrackerSpec extends BaseAkkaSpec {
       sessionTracker ! sessions(0).getRequests.head
 
       new TestKit(system).within(FiniteDuration(1800, "milliseconds"), FiniteDuration(3, "seconds")) {
-        val receivedList = statsActor expectMsg List(sessions(0).getRequests.head)
+        val receivedList = statsActor expectMsg SendRequests(List(sessions(0).getRequests.head))
         statsActor.expectTerminated(sessionTracker)
       }
     }

@@ -35,7 +35,7 @@ case class SessionHistory(requests: List[Request]) {
 class StatsActor extends Actor with ActorLogging {
   var sessions: List[SessionHistory] = List.empty
 
-  self ! SaveStatistics
+//  self ! SaveStatistics
 
   def receive: Receive = {
     case SendRequests(reqs) => sessions = sessions :+ SessionHistory(reqs)
@@ -73,7 +73,7 @@ class StatsActor extends Actor with ActorLogging {
   }
 
   def calculatePageVisitPercentage(sessions: List[SessionHistory]): Map[String,Int] = {
-    val visits: Map[String,Int] = calculateRequestsPerBrowser(sessions)
+    val visits: Map[String,Int] = calculateRequestsPerBrowser(sessions).filter(el => el._2 > 0)
     val totalVisits: Int = visits.map(el => el._2).sum
     visits.map(element => (element._1 -> (element._2*100 / totalVisits)))
   }
@@ -81,10 +81,12 @@ class StatsActor extends Actor with ActorLogging {
   def calculateTop2browsers(sessions: List[SessionHistory]): List[String] = {
     var browsers = calculateRequestsPerBrowser(sessions)
     var top2 = List.empty[String]
-      top2 = top2 :+ browsers.maxBy(_._2)._1
 
-    browsers = browsers.filter(_._1 != top2.head)
-    top2 = top2 :+ browsers.maxBy(_._2)._1
+    for(i <- 0 to 1){
+      top2 = top2 :+ browsers.maxBy(_._2)._1
+      browsers = browsers.filter(_._1 != top2(i))
+    }
+
     top2
   }
 
@@ -95,10 +97,11 @@ class StatsActor extends Actor with ActorLogging {
     var referrers = countedReferrers.toMap
 
     var top2 = List.empty[String]
-    top2 = top2 :+ referrers.maxBy(_._2)._1
+    for(i <- 0 to 1){
+      top2 = top2 :+ referrers.maxBy(_._2)._1
+      referrers = referrers.filter(_._1 != top2(i))
+    }
 
-    referrers = referrers.filter(_._1 != top2.head)
-    top2 = top2 :+ referrers.maxBy(_._2)._1
     top2
   }
 
@@ -122,7 +125,6 @@ class StatsActor extends Actor with ActorLogging {
       sessions.map(sessionHistory => sessionHistory.getRequests.last).
         count(req => req.url == url)
 
-    println(sinkPages)
     var top3 = List.empty[String]
 
     for(i <- 0 to 2){
