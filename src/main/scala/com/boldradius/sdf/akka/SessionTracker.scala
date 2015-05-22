@@ -14,6 +14,7 @@ object SessionTracker {
    * Messaging protocol
    */
   case class CheckSessionActivity(requestCount: Int)
+  case class CheckIfRunHelpChat()
 }
 
 class SessionTracker(statsActor: ActorRef, sessionTimeout: FiniteDuration) extends Actor with ActorLogging {
