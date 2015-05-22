@@ -1,5 +1,6 @@
 package com.boldradius.sdf.akka
 
+import akka.actor.ActorRef
 import play.api.libs.json._
 import shapeless._
 
@@ -25,10 +26,22 @@ case class BusiestMinute(minute: Long, numberOfRequests: Int) {
 
 object LiveStatistics {
 
-  def calculateUsers() = {
-    val stats = Statistics(Map("chrome" -> 5), BusiestMinute(256L, 50))
-    val oldUpdated = stats.copy(busiestMinute = stats.busiestMinute.copy(minute = 255L))
-    val lensUpdated = Statistics.busiestMinuteLens.set(stats)(23L)
+  def calculateStats(sessionStorage: Map[Long, SessionTrackerMetaData]): LiveStatistics = {
+    LiveStatistics(
+      sessionStorage.size,
+      calculateUsersPerUrl(sessionStorage),
+      calculateUsersPerBrowser(sessionStorage)
+    )
+  }
+
+  // Calculate number of users on each url
+  private def calculateUsersPerUrl(info: Map[Long, SessionTrackerMetaData]): Map[String, Int] = {
+    (for (url <- Session.urls) yield url -> info.count(rec => rec._2.lastUrl ==  url)).toMap
+  }
+
+  // Calculate number of users using each browser
+  private def calculateUsersPerBrowser(info: Map[Long, SessionTrackerMetaData]): Map[String, Int] = {
+    (for (browser <- Session.browsers) yield browser -> info.count(rec => rec._2.browser ==  browser)).toMap
   }
 
 }

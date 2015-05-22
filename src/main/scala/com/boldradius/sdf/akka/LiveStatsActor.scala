@@ -14,11 +14,11 @@ object LiveStatsActor {
 // Keeps track of the LIVE statistics
 class LiveStatsActor extends Actor with ActorLogging {
 
-  var currentNumberOfUsers = 0
+  var currentStats: LiveStatistics = LiveStatistics(0, Map.empty, Map.empty)
 
   def receive: Receive = {
-    case CurrentStats(users) =>
-      currentNumberOfUsers = users
+    case newStats: LiveStatistics =>
+      currentStats = newStats
       printStats()
     case message =>
       log.debug(s"Stats has received: $message")
@@ -28,6 +28,8 @@ class LiveStatsActor extends Actor with ActorLogging {
     println("===========================")
     println("LIVE Stats:")
     println("___________________________")
-    println(s"Current users: $currentNumberOfUsers")
+    println(s"Current users: ${currentStats.users}")
+    println(s"Browser info: ${currentStats.usersPerBrowser}")
+    println(s"Url info: ${currentStats.usersPerUrl}")
   }
 }

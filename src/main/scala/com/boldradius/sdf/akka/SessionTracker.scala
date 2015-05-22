@@ -48,3 +48,5 @@ class SessionTracker(statsActor: ActorRef, sessionTimeout: FiniteDuration, sessi
       }
   }
 }
+
+case class SessionTrackerMetaData(actorRef: ActorRef, browser: String, lastUrl: String)
