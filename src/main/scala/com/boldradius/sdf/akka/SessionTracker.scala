@@ -8,7 +8,8 @@ import com.boldradius.sdf.akka.SessionTracker._
 import scala.concurrent.duration.FiniteDuration
 
 object SessionTracker {
-  def props(statsActor: ActorRef, sessionTimeout: FiniteDuration): Props = Props(new SessionTracker(statsActor, sessionTimeout))
+  def props(statsActor: ActorRef, sessionTimeout: FiniteDuration, sessionId: Long = 1): Props =
+    Props(new SessionTracker(statsActor, sessionTimeout, sessionId))
 
   /**
    * Messaging protocol
@@ -21,7 +22,7 @@ object SessionTracker {
 
 }
 
-class SessionTracker(statsActor: ActorRef, sessionTimeout: FiniteDuration) extends Actor with ActorLogging {
+class SessionTracker(statsActor: ActorRef, sessionTimeout: FiniteDuration, sessionId: Long) extends Actor with ActorLogging {
 
   import context.dispatcher
 
@@ -38,10 +39,10 @@ class SessionTracker(statsActor: ActorRef, sessionTimeout: FiniteDuration) exten
       if (requests.size == oldRequestSize){
         // Send requests to be aggregated
         statsActor ! StatsActor.SendRequests(requests)
-
+        myTimer.map(timer => timer.cancel())
         // Tell the request consumer that you've died
-        context.parent ! DeathMessage(requests.head.sessionId)
-
+        if(requests.size>0)
+          context.parent ! DeathMessage(requests.head.sessionId)
         // Suicide1
         context.stop(self)
       }

@@ -55,7 +55,7 @@ class RequestConsumer extends Actor with ActorLogging {
   //Factory method to create a new session actor
   def makeSessionActor(id: Long): ActorRef = {
     val timeout: FiniteDuration = Duration(context.system.settings.config.getDuration("akka-workshop.session-tracker.session-timeout", TimeUnit.SECONDS), TimeUnit.SECONDS)
-    context.actorOf(SessionTracker.props(statsActor, timeout), "st-" + id.toString)
+    context.actorOf(SessionTracker.props(statsActor, timeout, id), "st-" + id.toString)
   }
 
   override val supervisorStrategy: SupervisorStrategy =

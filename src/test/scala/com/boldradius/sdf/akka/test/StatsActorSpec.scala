@@ -12,45 +12,45 @@ class StatsActorSpec extends BaseAkkaSpec {
 
   "The StatsActor" should {
     "calculate requests per browser" in new StatsActorSetup {
-      val requestsPerBrowser = statsActor.calculateRequestsPerBrowser(sessions)
+      val requestsPerBrowser = SessionStatistics.calculateRequestsPerBrowser(sessions)
       requestsPerBrowser("chrome") shouldBe 21
       requestsPerBrowser("firefox") shouldBe 14
       requestsPerBrowser("ie") shouldBe 7
     }
 
     "calculate visits percentage per browser" in new StatsActorSetup {
-      val visistsPercentage = statsActor.calculatePageVisitPercentage(sessions)
+      val visistsPercentage = SessionStatistics.calculatePageVisitPercentage(sessions)
       visistsPercentage("chrome") shouldBe 50
       visistsPercentage("firefox") shouldBe 33
       visistsPercentage("ie") shouldBe 16
     }
 
     "calculate top2 browsers" in new StatsActorSetup {
-      val top2browsers = statsActor.calculateTop2browsers(sessions)
+      val top2browsers = SessionStatistics.calculateTop2browsers(sessions)
       top2browsers(0) shouldBe "chrome"
       top2browsers(1) shouldBe "firefox"
     }
 
     "calculate top2 referrers" in new StatsActorSetup {
-      val top2referrers = statsActor.calculateTop2referrers(sessions)
+      val top2referrers = SessionStatistics.calculateTop2referrers(sessions)
       top2referrers(0) shouldBe "google"
       top2referrers(1) shouldBe "twitter"
     }
 
     "calculate the busiest minute" in new StatsActorSetup {
-      val busiestMinute = statsActor.calculateBusiestMinute(List(sessions.head))
+      val busiestMinute = SessionStatistics.calculateBusiestMinute(List(sessions.head))
       busiestMinute.minute shouldBe 23868
     }
 
     "calculate top3 landing pages" in new StatsActorSetup {
-      val top3landingPages = statsActor.calculateTop3landingPages(sessions)
+      val top3landingPages = SessionStatistics.calculateTop3landingPages(sessions)
       top3landingPages(0) shouldBe "/store"
       top3landingPages(1) shouldBe "/"
       top3landingPages(2) shouldBe "/about"
     }
 
     "calculate top3 sink pages" in new StatsActorSetup {
-      val top3sinkPages = statsActor.calculateTop3sinkPages(sessions)
+      val top3sinkPages = SessionStatistics.calculateTop3sinkPages(sessions)
       top3sinkPages(0) shouldBe "/about"
       top3sinkPages(1) shouldBe "/"
       top3sinkPages(2) shouldBe "/store"
@@ -61,7 +61,7 @@ class StatsActorSpec extends BaseAkkaSpec {
     }
 
     "calculate average visit time per url" in new StatsActorSetup {
-      val averagePerUrl = statsActor.calculateVisitTimePerURL(sessions)
+      val averagePerUrl = SessionStatistics.calculateVisitTimePerURL(sessions)
       averagePerUrl shouldEqual Map("/about" -> 1984003, "/" -> 1102224, "/store" -> 2092128)
     }
 

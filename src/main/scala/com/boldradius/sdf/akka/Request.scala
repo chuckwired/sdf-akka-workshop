@@ -1,6 +1,6 @@
 package com.boldradius.sdf.akka
 
-case class Request(sessionId: Long, timestamp: Long, url: String, referrer: String, browser: String)
+  case class Request(sessionId: Long, timestamp: Long, url: String, referrer: String, browser: String)
 
 object Visit {
   def fromRequests(requests: List[Request]): List[Visit] = {
