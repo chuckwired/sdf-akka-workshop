@@ -1,6 +1,7 @@
 package com.boldradius.sdf.akka.test
 
 import java.util.concurrent.TimeUnit
+import java.io.File
 
 import com.boldradius.sdf.akka.StatsActor.SendRequests
 import com.boldradius.sdf.akka.{Request, SessionTracker}
@@ -68,6 +69,17 @@ class SessionTrackerSpec extends BaseAkkaSpec {
         val receivedList = statsActor expectMsg SendRequests(List(sessions(0).getRequests.head))
         statsActor.expectTerminated(sessionTracker)
       }
+    }
+
+    "wait 10 sec on /help page and start a chat" in {
+      val statsActor = TestProbe()
+
+      val sessionTracker = TestActorRef(SessionTracker.props(statsActor.ref, testSessionTimeout))
+      sessionTracker.receive(Request(1, 1422197362, "/help", "google", "chrome"))
+
+      new File("chat.log" ).delete()
+      new File("chat.log").isFile() shouldBe false
+      //TODO check after 10 seconds
     }
   }
 }
