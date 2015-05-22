@@ -17,7 +17,7 @@ class RequestConsumerSpec extends BaseAkkaSpec {
       val requestConsumer = TestActorRef(RequestConsumer.props)
       requestConsumer.receive(TestData.sessions(0).getRequests.head)
       val rc: RequestConsumer = requestConsumer.underlyingActor
-      rc.sessionStorage(1).path.name shouldBe "st-" + 1
+      rc.sessionStorage(1).actorRef.path.name shouldBe "st-" + 1
     }
   }
 }

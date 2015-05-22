@@ -2,13 +2,9 @@ package com.boldradius.sdf.akka
 
 import java.util.concurrent.TimeUnit
 
-import akka.actor.SupervisorStrategy.{Escalate, Restart, Stop}
+import akka.actor.SupervisorStrategy.{Escalate, Restart}
 import akka.actor._
-import akka.pattern._
 import com.boldradius.sdf.akka.LiveStatsActor.UpdateLiveStats
-import com.boldradius.sdf.akka.Request
-
-import scala.concurrent.Future
 import scala.concurrent.duration._
 
 object RequestConsumer {
@@ -20,7 +16,7 @@ class RequestConsumer extends Actor with ActorLogging {
 
   import context.dispatcher
 
-  var sessionStorage = Map.empty[Long, ActorRef]
+  var sessionStorage = Map.empty[Long, SessionTrackerMetaData]
   val statsActor = context.actorOf(StatsActor.props, "stats-service")
   val liveStatsActor = context.actorOf(LiveStatsActor.props, "live-stats-service")
 
@@ -31,11 +27,13 @@ class RequestConsumer extends Actor with ActorLogging {
 
   def receive: Receive = {
     case Request(id, now, randomUrl, referrer, browser) if sessionStorage.exists(record => record._1 == id) =>
-      sessionStorage(id) forward Request(id, now, randomUrl, referrer, browser)
+      // forward request to the session trackers and update the storage's urls
+      sessionStorage(id).actorRef forward Request(id, now, randomUrl, referrer, browser)
+      sessionStorage = sessionStorage.updated(id, sessionStorage(id).copy(lastUrl = randomUrl))
 
     case Request(id, now, randomUrl, referrer, browser) =>
       val stActor = makeSessionActor(id)
-      sessionStorage += (id -> stActor)
+      sessionStorage += (id -> SessionTrackerMetaData(stActor, browser, randomUrl))
       stActor forward Request(id, now, randomUrl, referrer, browser)
 
     case SessionTracker.DeathMessage(id) =>
@@ -43,7 +41,7 @@ class RequestConsumer extends Actor with ActorLogging {
       sessionStorage = sessionStorage - id
 
     case UpdateLiveStats =>
-      liveStatsActor ! LiveStatsActor.CurrentStats(sessionStorage.size)
+      liveStatsActor ! LiveStatistics.calculateStats(sessionStorage)
 
     case Terminated(`statsActor`) =>
       val emailActor = context.actorOf(EmailActor.props, "email-service")
@@ -58,6 +56,7 @@ class RequestConsumer extends Actor with ActorLogging {
     context.actorOf(SessionTracker.props(statsActor, timeout, id), "st-" + id.toString)
   }
 
+  // What to do when children fail, here to catch the StatsActor generally
   override val supervisorStrategy: SupervisorStrategy =
     OneForOneStrategy(maxNrOfRetries = 4) {
       case StatsActor.StatsActorError =>
