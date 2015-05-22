@@ -2,11 +2,12 @@ package com.boldradius.sdf.akka
 import java.io._
 import akka.actor._
 
-import com.boldradius.sdf.akka.StatsActor.{SendRequests, SaveStatistics, BusiestMinute, StatsActorError}
+import com.boldradius.sdf.akka.StatsActor._
 import scala.concurrent.duration.FiniteDuration
 import play.api.libs.json.{JsNumber, JsValue, Json, JsArray}
 import scala.concurrent.ExecutionContext.Implicits.global
 
+import Statistics._
 
 object StatsActor {
   def props = Props[StatsActor]
@@ -16,19 +17,12 @@ object StatsActor {
   /**
    *  Statistics protocol
    */
-  case class BusiestMinute(minute: Long, numberOfRequests: Int){
-    val toJson = JsArray(Seq(JsNumber(minute), JsNumber(numberOfRequests)))
-  }
-
   case object StatsActorError extends IllegalStateException("An artificial error occured.")
 }
-
-
 
 case class SessionHistory(requests: List[Request]) {
   def getRequests: List[Request] = requests
 }
-
 
 // Collects and calculates lots of different statistics
 
@@ -39,10 +33,13 @@ class StatsActor extends Actor with ActorLogging {
 
   def receive: Receive = {
     case SendRequests(reqs) => sessions = sessions :+ SessionHistory(reqs)
+
     case StatsActorError => throw StatsActorError
+
     case SaveStatistics =>
       saveStatistics(sessions)
       context.system.scheduler.scheduleOnce(FiniteDuration(30, "seconds"), self, SaveStatistics)
+
     case message => log.debug(s"Stats has received: $message")
   }
 
