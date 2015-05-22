@@ -67,7 +67,7 @@ class StatsActor extends Actor with ActorLogging {
       Json.parse(Source.fromFile("statistics.txt").mkString)
     }
     else{
-      Json.parse("")
+      Json.parse("{}")
     }
   }
 }
