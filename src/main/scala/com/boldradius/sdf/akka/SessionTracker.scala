@@ -52,7 +52,6 @@ class SessionTracker(statsActor: ActorRef, sessionTimeout: FiniteDuration, sessi
       }
     case CheckIfRunHelpChat(oldRequestSize) =>
       if (requests.size == oldRequestSize){
-        println("NEW CHAT ###########################")
         ChatActor(sessionId)
       }
   }

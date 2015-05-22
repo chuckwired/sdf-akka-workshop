@@ -5,10 +5,13 @@ import java.util.concurrent.TimeUnit
 import akka.actor.SupervisorStrategy.{Escalate, Restart}
 import akka.actor._
 import com.boldradius.sdf.akka.LiveStatsActor.UpdateLiveStats
+import com.boldradius.sdf.akka.RequestConsumer.Reject
 import scala.concurrent.duration._
 
 object RequestConsumer {
   def props = Props[RequestConsumer]
+
+  case object Reject
 }
 
 // Primary consumer of the requests
@@ -32,9 +35,9 @@ class RequestConsumer extends Actor with ActorLogging {
       sessionStorage = sessionStorage.updated(id, sessionStorage(id).copy(lastUrl = randomUrl))
 
     case Request(id, now, randomUrl, referrer, browser) =>
-      val stActor = makeSessionActor(id)
-      sessionStorage += (id -> SessionTrackerMetaData(stActor, browser, randomUrl))
-      stActor forward Request(id, now, randomUrl, referrer, browser)
+      val pstActor = makeProxySessionActor(id)
+      sessionStorage += (id -> SessionTrackerMetaData(pstActor, browser, randomUrl))
+      pstActor forward Request(id, now, randomUrl, referrer, browser)
 
     case SessionTracker.DeathMessage(id) =>
       // When a session has timed out, remove it from the map
@@ -47,13 +50,15 @@ class RequestConsumer extends Actor with ActorLogging {
       val emailActor = context.actorOf(EmailActor.props, "email-service")
       emailActor ! StatsActor.StatsActorError
 
+    case Reject =>  println("To meny requests per second, requests rejected!")
+
     case message => log.debug(s"Received the following message: $message")
   }
 
   //Factory method to create a new session actor
-  def makeSessionActor(id: Long): ActorRef = {
+  def makeProxySessionActor(id: Long): ActorRef = {
     val timeout: FiniteDuration = Duration(context.system.settings.config.getDuration("akka-workshop.session-tracker.session-timeout", TimeUnit.SECONDS), TimeUnit.SECONDS)
-    context.actorOf(SessionTracker.props(statsActor, timeout, id), "st-" + id.toString)
+    context.actorOf(ProxySessionTracker.props(self, statsActor, timeout, id), "pst-" + id.toString)
   }
 
   // What to do when children fail, here to catch the StatsActor generally
