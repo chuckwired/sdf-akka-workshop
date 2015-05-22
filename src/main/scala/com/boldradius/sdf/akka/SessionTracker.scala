@@ -38,6 +38,7 @@ class SessionTracker(statsActor: ActorRef, sessionTimeout: FiniteDuration, sessi
       myTimer = Some(context.system.scheduler.scheduleOnce(sessionTimeout, self, CheckSessionActivity(requests.size)))
       if(req.url == "/help")
         myTimer2 = Some(context.system.scheduler.scheduleOnce(FiniteDuration(10, "seconds"), self, CheckIfRunHelpChat(requests.size)))
+
     case CheckSessionActivity(oldRequestSize) =>
       if (requests.size == oldRequestSize){
         // Send requests to be aggregated

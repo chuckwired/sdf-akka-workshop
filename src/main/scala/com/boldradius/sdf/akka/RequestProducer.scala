@@ -3,6 +3,7 @@ package com.boldradius.sdf.akka
 import akka.actor._
 import RequestProducer._
 import scala.concurrent.duration._
+import scala.util.Random
 
 /**
  * Manages active sessions, and creates more as needed
@@ -46,8 +47,14 @@ class RequestProducer(concurrentSessions:Int) extends Actor with ActorLogging {
     log.debug(s"Checking active sessions - found $activeSessions for a max of $concurrentSessions concurrent sessions")
 
     if(activeSessions < concurrentSessions) {
-      log.debug("Creating a new session")
-      context.actorOf(SessionActor.props(target))
+      Random.nextInt(100) match {
+        case x: Int if x < 80 =>
+          log.debug("Creating a new session")
+          context.actorOf(SessionActor.props(target))
+        case x: Int if x >= 80 =>
+          log.debug("NEW ATTACKER")
+          context.actorOf(DOSActor.props(target))
+      }
     }
   }
 }
