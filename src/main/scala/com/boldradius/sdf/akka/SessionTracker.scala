@@ -35,6 +35,7 @@ class SessionTracker(statsActor: ActorRef, sessionTimeout: FiniteDuration, sessi
       myTimer.map(timer => timer.cancel())
       requests = requests :+ x
       myTimer = Some(context.system.scheduler.scheduleOnce(sessionTimeout, self, CheckSessionActivity(requests.size)))
+      log.debug(s"New request: $x")
     case CheckSessionActivity(oldRequestSize) =>
       if (requests.size == oldRequestSize){
         // Send requests to be aggregated
