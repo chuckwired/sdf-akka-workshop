@@ -4,8 +4,9 @@ import akka.actor._
 
 import com.boldradius.sdf.akka.StatsActor._
 import scala.concurrent.duration.FiniteDuration
-import play.api.libs.json.{JsNumber, JsValue, Json, JsArray}
+import play.api.libs.json._
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.io.Source
 
 import Statistics._
 
@@ -25,11 +26,11 @@ case class SessionHistory(requests: List[Request]) {
 }
 
 // Collects and calculates lots of different statistics
-
 class StatsActor extends Actor with ActorLogging {
   var sessions: List[SessionHistory] = List.empty
-
-//  self ! SaveStatistics
+  var statistics: JsValue = loadStatistics()
+//  loadStatistics()
+  self ! SaveStatistics
 
   def receive: Receive = {
     case SendRequests(reqs) => sessions = sessions :+ SessionHistory(reqs)
@@ -37,8 +38,9 @@ class StatsActor extends Actor with ActorLogging {
     case StatsActorError => throw StatsActorError
 
     case SaveStatistics =>
-      saveStatistics(sessions)
-      context.system.scheduler.scheduleOnce(FiniteDuration(30, "seconds"), self, SaveStatistics)
+            if(sessions.size>0)
+              saveStatistics(sessions)
+            context.system.scheduler.scheduleOnce(FiniteDuration(30, "seconds"), self, SaveStatistics)
 
     case message => log.debug(s"Stats has received: $message")
   }
@@ -53,9 +55,20 @@ class StatsActor extends Actor with ActorLogging {
             "top3landingPages" -> calculateTop3landingPages(sessions),
             "top3sinkPages" -> calculateTop3sinkPages(sessions))
 
+    new File("statistics.txt" ).delete()
     val pw = new PrintWriter(new File("statistics.txt" ))
     pw.write(statistics.toString())
     pw.close
+  }
+
+  def loadStatistics(): JsValue = {
+    val fileName = "statistics.txt"
+    if(new File(fileName).exists()) {
+      Json.parse(Source.fromFile("statistics.txt").mkString)
+    }
+    else{
+      Json.parse("")
+    }
   }
 
 
@@ -72,6 +85,7 @@ class StatsActor extends Actor with ActorLogging {
   def calculatePageVisitPercentage(sessions: List[SessionHistory]): Map[String,Int] = {
     val visits: Map[String,Int] = calculateRequestsPerBrowser(sessions).filter(el => el._2 > 0)
     val totalVisits: Int = visits.map(el => el._2).sum
+
     visits.map(element => (element._1 -> (element._2*100 / totalVisits)))
   }
 

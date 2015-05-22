@@ -4,7 +4,7 @@ import akka.actor.ActorSystem
 import akka.testkit.{EventFilter, TestProbe, TestKit, TestActorRef}
 import com.boldradius.sdf.akka._
 import com.boldradius.sdf.akka.test.TestData._
-
+import java.io.File
 import scala.concurrent.duration.FiniteDuration
 
 
@@ -70,6 +70,15 @@ class StatsActorSpec extends BaseAkkaSpec {
 
       EventFilter.error("TO admin@app.com: BRO the StatsActor can't be automatically resuscitated, fix it!") intercept
         system.stop(requestConsumer.underlyingActor.statsActor)
+    }
+
+    "save stats to a file" in new StatsActorSetup{
+      statsActor.saveStatistics(sessions)
+      new File("statistics.txt").exists shouldBe true
+    }
+
+    "load stats from a file and check if there is a content" in new StatsActorSetup{
+      statsActor.loadStatistics().toString().length should be > 0
     }
 
     trait StatsActorSetup {
