@@ -7,6 +7,7 @@ scalaVersion := "2.11.5"
 libraryDependencies ++= Seq(
   "com.typesafe.akka" %% "akka-actor"      % "2.3.9",
   "com.typesafe.akka" %% "akka-testkit"    % "2.3.9" % "test",
+  "com.typesafe.akka" %% "akka-remote"     % "2.3.11",
   "org.scalatest"     %% "scalatest"       % "2.2.4" % "test",
   "com.typesafe.akka" %% "akka-slf4j"      % "2.3.6",
   "ch.qos.logback"    %  "logback-classic" % "1.1.2",
@@ -16,6 +17,7 @@ libraryDependencies ++= Seq(
 
 resolvers ++= Seq(
   Resolver.sonatypeRepo("releases"),
-  Resolver.sonatypeRepo("snapshots")
+  Resolver.sonatypeRepo("snapshots"),
+  "Typesafe Repository" at "http://repo.typesafe.com/typesafe/releases/"
 
 )

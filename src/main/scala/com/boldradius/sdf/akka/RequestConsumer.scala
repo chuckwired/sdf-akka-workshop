@@ -6,6 +6,7 @@ import akka.actor.SupervisorStrategy.{Escalate, Restart}
 import akka.actor._
 import com.boldradius.sdf.akka.LiveStatsActor.UpdateLiveStats
 import scala.concurrent.duration._
+import scala.collection.mutable.{Map => MutableMap}
 
 object RequestConsumer {
   def props = Props[RequestConsumer]
@@ -15,10 +16,13 @@ object RequestConsumer {
 class RequestConsumer extends Actor with ActorLogging {
 
   import context.dispatcher
+  import shapeless._
 
-  var sessionStorage = Map.empty[Long, SessionTrackerMetaData]
+  val sessionStorage = MutableMap.empty[Long, SessionTrackerMetaData]
   val statsActor = context.actorOf(StatsActor.props, "stats-service")
   val liveStatsActor = context.actorOf(LiveStatsActor.props, "live-stats-service")
+
+  val lastUrlLens = lens[SessionTrackerMetaData] >> 'lastUrl
 
   //We want to handle when we fail to restart the statsActor too many times
   context.watch(statsActor)
@@ -29,7 +33,7 @@ class RequestConsumer extends Actor with ActorLogging {
     case Request(id, now, randomUrl, referrer, browser) if sessionStorage.exists(record => record._1 == id) =>
       // forward request to the session trackers and update the storage's urls
       sessionStorage(id).actorRef forward Request(id, now, randomUrl, referrer, browser)
-      sessionStorage = sessionStorage.updated(id, sessionStorage(id).copy(lastUrl = randomUrl))
+      sessionStorage.update(id, lastUrlLens.set(sessionStorage(id))(randomUrl))
 
     case Request(id, now, randomUrl, referrer, browser) =>
       val stActor = makeSessionActor(id)
@@ -38,10 +42,10 @@ class RequestConsumer extends Actor with ActorLogging {
 
     case SessionTracker.DeathMessage(id) =>
       // When a session has timed out, remove it from the map
-      sessionStorage = sessionStorage - id
+      sessionStorage - id
 
     case UpdateLiveStats =>
-      liveStatsActor ! LiveStatistics.calculateStats(sessionStorage)
+      liveStatsActor ! LiveStatistics.calculateStats(sessionStorage.toMap)
 
     case Terminated(`statsActor`) =>
       val emailActor = context.actorOf(EmailActor.props, "email-service")
